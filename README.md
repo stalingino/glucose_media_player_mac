@@ -9,9 +9,9 @@ _A Sleek & Lightweight VLC Alternative with On-Device AI Subtitle<br>_
 [![Svelte](https://img.shields.io/badge/Frontend-Svelte-1a1a1a?style=for-the-badge&logo=svelte&logoColor=white&labelColor=0a0a0a)](https://svelte.dev)
 [![Rust](https://img.shields.io/badge/Backend-Rust-1a1a1a?style=for-the-badge&logo=rust&logoColor=white&labelColor=0a0a0a)](https://rust-lang.org)
 
-[![Version](https://img.shields.io/github/v/release/rudi-q/glucose_media_player?style=for-the-badge&labelColor=0a0a0a&color=1a1a1a&label=Version)](https://github.com/rudi-q/glucose_media_player/releases)
-[![Downloads](https://img.shields.io/github/downloads/rudi-q/glucose_media_player/total?style=for-the-badge&labelColor=0a0a0a&color=1a1a1a)](https://github.com/rudi-q/glucose_media_player/releases)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20-1a1a1a?style=for-the-badge&labelColor=0a0a0a)](https://github.com/rudi-q/glucose_media_player/releases)
+[![Version](https://img.shields.io/github/v/release/stalingino/glucose_media_player_mac?style=for-the-badge&labelColor=0a0a0a&color=1a1a1a&label=Version)](https://github.com/stalingino/glucose_media_player_mac/releases)
+[![Downloads](https://img.shields.io/github/downloads/stalingino/glucose_media_player_mac/total?style=for-the-badge&labelColor=0a0a0a&color=1a1a1a)](https://github.com/stalingino/glucose_media_player_mac/releases)
+[![Platform](https://img.shields.io/badge/Platform-macOS-1a1a1a?style=for-the-badge&labelColor=0a0a0a)](https://github.com/stalingino/glucose_media_player_mac/releases)
 
 </div>
 
@@ -54,7 +54,7 @@ Automatically scans and displays your recent videos in a beautiful grid layout.
 
 Download the latest release for your platform:
 
-- **Windows**: `glucose_0.2.0_x64_en-US.msi` or `.exe`
+- **macOS**: `Glucose_macOS.dmg` (Universal — Apple Silicon & Intel)
 
 ### Build from Source
 
@@ -64,16 +64,14 @@ Download the latest release for your platform:
 - [pnpm](https://pnpm.io/) (recommended) or npm
 - [Rust](https://www.rust-lang.org/tools/install) (latest stable)
 - Platform-specific requirements:
-  - **Windows**: [Microsoft Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-  - **macOS**: Xcode Command Line Tools
-  - **Linux**: `libwebkit2gtk-4.1-dev`, `build-essential`, `curl`, `wget`, `file`, `libssl-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`
+  - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
 
 #### Building
 
 ```bash
 # Clone the repository
-git clone https://github.com/rudi-q/glucose_media_player.git
-cd glucose
+git clone https://github.com/stalingino/glucose_media_player_mac.git
+cd glucose_media_player_mac
 
 # Install dependencies
 pnpm install
@@ -174,16 +172,16 @@ Copyright (c) 2025 glucose
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/rudi-q/glucose_media_player/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/rudi-q/glucose_media_player/discussions)
+- **Issues**: [GitHub Issues](https://github.com/stalingino/glucose_media_player_mac/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/stalingino/glucose_media_player_mac/discussions)
 
 ---
 
 <div align="center">
   <p>Made by the maker of <a href="https://github.com/rudi-q/leed_pdf_viewer">LeedPDF</a></p>
   <p>
-    <a href="https://github.com/yourusername/glucose">GitHub</a> •
-    <a href="https://github.com/yourusername/glucose/issues">Report Bug</a> •
-    <a href="https://github.com/yourusername/glucose/discussions">Request Feature</a>
+    <a href="https://github.com/stalingino/glucose_media_player_mac">GitHub</a> •
+    <a href="https://github.com/stalingino/glucose_media_player_mac/issues">Report Bug</a> •
+    <a href="https://github.com/stalingino/glucose_media_player_mac/discussions">Request Feature</a>
   </p>
 </div>
