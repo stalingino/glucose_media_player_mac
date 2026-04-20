@@ -52,8 +52,6 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           # Use tag name if triggered by tag push, otherwise use manual input
           tagName: ${{ github.event.inputs.version || github.ref_name }}
@@ -61,6 +59,5 @@ jobs:
           releaseBody: ''
           releaseDraft: true
           prerelease: false
-          includeUpdaterJson: true
           assetNamePattern: 'Glucose_Windows.[ext]'
           args: --target x86_64-pc-windows-msvc --bundles nsis
