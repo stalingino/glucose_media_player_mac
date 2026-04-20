@@ -19,11 +19,7 @@
     Minimize2,
     Loader2,
   } from "lucide-svelte";
-  import {
-    appSettings,
-    setupStore,
-    type SetupStatus,
-  } from "$lib/stores/appStore";
+  import { appSettings } from "$lib/stores/appStore";
   import {
     watchProgressStore,
     type WatchProgress,
@@ -84,10 +80,6 @@
   }
   let embeddedSubtitleTracks = $state<EmbeddedSubtitleTrack[]>([]);
   let selectedEmbeddedLanguage = $state('en');
-  let isGeneratingSubtitles = $state(false);
-  let generationProgress = $state(0);
-  let generationMessage = $state("");
-  let showModelSelector = $state(false);
   let subtitleLoadId = 0; // Serialize subtitle loads to prevent race conditions
 
   // Context menu state
@@ -122,10 +114,6 @@
 
   // Get context from layout
   const showSettings = getContext<() => void>("showSettings");
-  const showSetupDialog = getContext<() => void>("showSetupDialog");
-  const getSetupStatus = getContext<() => SetupStatus | null>("setupStatus");
-
-  let setupStatus = $state(getSetupStatus());
 
   onMount(() => {
     let disposed = false;
@@ -182,24 +170,6 @@
     // Register Tauri event listeners
     (async () => {
       const results = await Promise.allSettled([
-        // Listen for subtitle generation progress
-        listen<{ stage: string; progress: number; message: string }>(
-          "subtitle-generation-progress",
-          (event) => {
-            generationProgress = event.payload.progress;
-            generationMessage = event.payload.message;
-
-            if (event.payload.stage === "complete") {
-              setTimeout(() => {
-                isGeneratingSubtitles = false;
-                generationProgress = 0;
-                generationMessage = "";
-              }, 2000);
-            } else if (event.payload.stage === "error") {
-              isGeneratingSubtitles = false;
-            }
-          },
-        ),
         // Listen for conversion progress
         listen<{ stage: string; progress: number; message: string }>(
           "conversion-progress",
@@ -790,16 +760,6 @@
     if (showSubtitleMenu && !target.closest(".subtitle-control")) {
       showSubtitleMenu = false;
     }
-    if (
-      showModelSelector &&
-      !(
-        target.closest(".ai-subtitle-generator") ||
-        target.closest(".subtitle-control") ||
-        target.closest(".model-selector")
-      )
-    ) {
-      showModelSelector = false;
-    }
     if (showContextMenu && !target.closest(".context-menu")) {
       showContextMenu = false;
     }
@@ -1129,77 +1089,8 @@
 
   function toggleSubtitleMenu() {
     showSubtitleMenu = !showSubtitleMenu;
-    if (showSubtitleMenu) {
-      showModelSelector = false;
-    }
   }
 
-  function openAIFromUnifiedMenu() {
-    showSubtitleMenu = false;
-    setTimeout(() => {
-      showModelSelector = true;
-    }, 0);
-  }
-
-  async function startSubtitleGeneration(modelSize: string) {
-    if (!currentVideoPath) {
-      alert("No video loaded");
-      return;
-    }
-
-    // Check if setup is complete
-    const status = setupStatus || getSetupStatus();
-    if (
-      !status ||
-      !status.setup_completed ||
-      status.models_installed.length === 0
-    ) {
-      showSetupDialog();
-      return;
-    }
-
-    showModelSelector = false;
-    isGeneratingSubtitles = true;
-    generationProgress = 0;
-    generationMessage = "Starting subtitle generation...";
-
-    try {
-      // Get current subtitle language from store at call time
-      const currentSettings = $appSettings;
-      const subtitlePath = await invoke<string>("generate_subtitles", {
-        videoPath: currentVideoPath,
-        modelSize: modelSize,
-        language: currentSettings.subtitleLanguage,
-      });
-
-      // Auto-load the generated subtitle
-      await loadSubtitle(subtitlePath);
-    } catch (err) {
-      console.error("Failed to generate subtitles:", err);
-      alert(`Subtitle generation failed: ${err}`);
-      isGeneratingSubtitles = false;
-      generationProgress = 0;
-      generationMessage = "";
-    }
-  }
-
-  function getEstimatedTranscriptionTime(modelKey: string): string {
-    if (!duration) return "Unknown";
-
-    const coefficients: Record<string, { min: number; max: number }> = {
-      tiny: { min: 0.15, max: 0.25 },
-      small: { min: 0.6, max: 0.8 },
-      "large-v3-turbo": { min: 0.9, max: 1.2 },
-    };
-
-    const coef = coefficients[modelKey];
-    if (!coef) return "Unknown";
-
-    const avgCoef = (coef.min + coef.max) / 2;
-    const estimatedSeconds = duration * avgCoef;
-
-    return formatEstimatedTime(estimatedSeconds);
-  }
 </script>
 
 <main
@@ -1272,30 +1163,6 @@
       {/if}
     </video>
   </div>
-
-  <!-- AI Subtitle Generation Progress Overlay -->
-  {#if isGeneratingSubtitles}
-    <div class="generation-overlay">
-      <div class="generation-modal">
-        <div class="generation-icon">
-          <Loader2 size={48} strokeWidth={2} class="spinner" />
-        </div>
-        <h3>Generating AI Subtitles</h3>
-        <div class="progress-container">
-          <div class="progress-track">
-            <div
-              class="progress-fill"
-              style="width: {generationProgress}%"
-            ></div>
-          </div>
-          <div class="progress-percentage">
-            {Math.round(generationProgress)}%
-          </div>
-        </div>
-        <p class="generation-message">{generationMessage}</p>
-      </div>
-    </div>
-  {/if}
 
   <!-- Hidden preview video for generating thumbnails -->
   <!-- svelte-ignore a11y_media_has_caption -->
@@ -1444,10 +1311,8 @@
             <button
               class="control-button"
               class:subtitle-active={subtitleSrc && subtitlesEnabled}
-              class:generating={isGeneratingSubtitles}
               title="Subtitles"
               onclick={() => (showSubtitleMenu = !showSubtitleMenu)}
-              disabled={isGeneratingSubtitles}
             >
               {#if subtitleSrc && subtitlesEnabled}
                 <Captions size={20} />
@@ -1456,7 +1321,7 @@
               {/if}
             </button>
 
-            {#if showSubtitleMenu && !isGeneratingSubtitles}
+            {#if showSubtitleMenu}
               <div class="subtitle-menu">
                 <div class="model-header">Subtitles</div>
                 <button
@@ -1470,10 +1335,6 @@
                   <span class="model-desc"
                     >Open .srt, .vtt or compatible file</span
                   >
-                </button>
-                <button class="model-option" onclick={openAIFromUnifiedMenu}>
-                  <span class="model-name">Generate with AI</span>
-                  <span class="model-desc">Auto-generate using Whisper AI</span>
                 </button>
                 {#if embeddedSubtitleTracks.length > 0}
                   <div class="subtitle-menu-divider"></div>
@@ -1502,53 +1363,6 @@
               </div>
             {/if}
           </div>
-
-          <!-- Model selector anchored to unified subtitle control -->
-          {#if showModelSelector && !isGeneratingSubtitles}
-            <div class="model-selector">
-              <div class="model-header">Select AI Model</div>
-              {#if setupStatus && setupStatus.models_installed.length > 0}
-                {#each setupStatus.models_installed as model}
-                  {#if model === "tiny"}
-                    <button
-                      class="model-option"
-                      onclick={() => startSubtitleGeneration("tiny")}
-                    >
-                      <span class="model-name">Tiny</span>
-                      <span class="model-desc"
-                        >{getEstimatedTranscriptionTime("tiny")} • Fastest</span
-                      >
-                    </button>
-                  {:else if model === "small"}
-                    <button
-                      class="model-option"
-                      onclick={() => startSubtitleGeneration("small")}
-                    >
-                      <span class="model-name">Small</span>
-                      <span class="model-desc"
-                        >{getEstimatedTranscriptionTime("small")} • Balanced</span
-                      >
-                    </button>
-                  {:else if model === "large-v3-turbo"}
-                    <button
-                      class="model-option"
-                      onclick={() => startSubtitleGeneration("large-v3-turbo")}
-                    >
-                      <span class="model-name">Large V3 Turbo</span>
-                      <span class="model-desc"
-                        >{getEstimatedTranscriptionTime("large-v3-turbo")} • Most
-                        Accurate</span
-                      >
-                    </button>
-                  {/if}
-                {/each}
-              {:else}
-                <div class="no-models-message">
-                  No AI models installed. Open Settings to download models.
-                </div>
-              {/if}
-            </div>
-          {/if}
 
           <button
             class="control-button"
@@ -1988,7 +1802,6 @@
   /* Hide close button in PiP mode (handled via conditional rendering) */
   /* Hide subtitle menus and volume menus in PiP mode */
   .pip-controls .subtitle-menu,
-  .pip-controls .model-selector,
   .pip-controls .volume-menu {
     display: none !important;
   }
@@ -2133,11 +1946,6 @@
     opacity: 1;
   }
 
-  .control-button.generating {
-    color: #c065b6;
-    opacity: 1;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
 
   @keyframes pulse {
     0%,
@@ -2319,22 +2127,6 @@
     margin: 0.5rem 0;
   }
 
-  .model-selector {
-    position: absolute;
-    bottom: 100%;
-    right: 0;
-    margin-bottom: 0.5rem;
-    background: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 0.75rem 0;
-    min-width: 220px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    z-index: 100;
-  }
-
   .model-header {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
@@ -2373,14 +2165,6 @@
   .model-desc {
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.6);
-  }
-
-  .no-models-message {
-    padding: 1rem;
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.7);
-    text-align: center;
-    line-height: 1.5;
   }
 
   .generation-overlay {

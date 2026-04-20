@@ -1,11 +1,5 @@
 import { writable } from 'svelte/store';
 
-export interface SetupStatus {
-	ffmpeg_installed: boolean;
-	models_installed: string[];
-	setup_completed: boolean;
-}
-
 export interface AppSettings {
 	subtitleLanguage: string;
 	selectedAudioDevice: string;
@@ -38,16 +32,3 @@ function createAppStore() {
 }
 
 export const appSettings = createAppStore();
-
-// Setup status store
-function createSetupStore() {
-	const { subscribe, set } = writable<SetupStatus | null>(null);
-
-	return {
-		subscribe,
-		setStatus: (status: SetupStatus) => set(status),
-		reset: () => set(null)
-	};
-}
-
-export const setupStore = createSetupStore();
